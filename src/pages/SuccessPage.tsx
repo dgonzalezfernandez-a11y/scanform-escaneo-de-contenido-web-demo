@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CheckCircle2, FileText, Home, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -31,16 +31,9 @@ export function SuccessPage() {
     };
     fetchScanData();
   }, [id]);
-  const cardVariants: Variants = {
+  const cardVariants = {
     hidden: { opacity: 0, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      transition: { 
-        duration: 0.5, 
-        ease: "easeOut" 
-      } 
-    },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
   };
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center relative">

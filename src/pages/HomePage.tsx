@@ -2,8 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
 import { FileClock, Shield, Cloud } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -28,6 +28,7 @@ export function HomePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [latestScan, setLatestScan] = useState<ScanRecord | null>(null);
   const [isFetchingLatest, setIsFetchingLatest] = useState(true);
+  const navigate = useNavigate();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { title: '', description: '' },
@@ -35,50 +36,47 @@ export function HomePage() {
   const handleFileSelect = (file: File) => {
     form.setValue('file', file, { shouldValidate: true });
   };
-  const pollScanStatus = useCallback(async (scanId: string) => {
-    const interval = setInterval(async () => {
-      try {
-        const scan = await api<ScanRecord>(`/api/scans/${scanId}`);
-        if (scan.status !== 'processing') {
-          clearInterval(interval);
-          setLatestScan(scan);
-          setIsUploading(false);
-          toast.success('Scan complete!', { description: `File: ${scan.filename}` });
-        } else {
-          setLatestScan(scan);
-        }
-      } catch (error) {
-        clearInterval(interval);
-        setIsUploading(false);
-        toast.error('Failed to get scan status.');
-        console.error(error);
-      }
-    }, 2000);
-  }, []);
   const onSubmit = async (data: FormValues) => {
     setIsUploading(true);
     setUploadProgress(0);
-    setLatestScan(null);
     const formData = new FormData();
     formData.append('file', data.file);
     if (data.title) formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
+    // Simulate progress for better UX
     const progressInterval = setInterval(() => {
-      setUploadProgress(prev => (prev < 95 ? prev + 5 : prev));
+      setUploadProgress(prev => (prev < 95 ? prev + 10 : prev));
     }, 200);
     try {
       const response = await apiForm<{ id: string }>(`/api/scan`, formData);
       clearInterval(progressInterval);
       setUploadProgress(100);
-      toast.info('File uploaded. Processing scan...');
-      pollScanStatus(response.id);
+      toast.success('File uploaded successfully!');
+      navigate(`/success/${response.id}`);
     } catch (error) {
       clearInterval(progressInterval);
       setIsUploading(false);
+      setUploadProgress(0);
       toast.error('Upload failed. Please try again.');
       console.error(error);
     }
   };
+  const pollScanStatus = useCallback(async (scanId: string) => {
+    const poll = async () => {
+      try {
+        const scan = await api<ScanRecord>(`/api/scans/${scanId}`);
+        if (scan.status !== 'processing') {
+          setLatestScan(scan);
+        } else {
+          setLatestScan(scan);
+          setTimeout(poll, 3000);
+        }
+      } catch (error) {
+        console.error('Failed to poll scan status.', error);
+      }
+    };
+    poll();
+  }, []);
   useEffect(() => {
     const fetchLatest = async () => {
       setIsFetchingLatest(true);
@@ -197,7 +195,7 @@ export function HomePage() {
                         </motion.div>
                         <motion.div variants={fieldVariants} initial="hidden" animate="visible" transition={{ delay: 0.8 }}>
                           <Button type="submit" className="w-full btn-gradient" disabled={isUploading || !form.formState.isValid}>
-                            {isUploading ? 'Scanning...' : 'Upload and Scan'}
+                            {isUploading ? 'Uploading...' : 'Upload and Scan'}
                           </Button>
                         </motion.div>
                       </form>
@@ -214,7 +212,7 @@ export function HomePage() {
                 <Card className="bg-secondary/50">
                   <CardHeader>
                     <CardTitle>Latest Scan Result</CardTitle>
-                    <CardDescription>The result of your most recent scan will appear here.</CardDescription>
+                    <CardDescription>The result of the most recent scan will appear here.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {isFetchingLatest ? (
@@ -248,7 +246,7 @@ export function HomePage() {
               </motion.div>
             </main>
             <footer className="text-center mt-16 text-muted-foreground/70 text-sm">
-              <p>Built with ❤️ at Cloudflare</p>
+              <p>Built with ❤�� at Cloudflare</p>
             </footer>
           </div>
         </div>

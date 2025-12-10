@@ -14,6 +14,7 @@ import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import { ScanPage } from '@/pages/ScanPage';
 import { ScanDetailPage } from '@/pages/ScanDetailPage';
+import { SuccessPage } from '@/pages/SuccessPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -29,6 +30,11 @@ const router = createBrowserRouter([
   {
     path: "/scans/:id",
     element: <ScanDetailPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/success/:id",
+    element: <SuccessPage />,
     errorElement: <RouteErrorBoundary />,
   },
 ]);
