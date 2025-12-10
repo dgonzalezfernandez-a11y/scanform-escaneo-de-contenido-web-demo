@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
-import { FileClock, Shield, Cloud } from 'lucide-react';
+import { FileClock, Shield, Cloud, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { FileUploader } from '@/components/FileUploader';
 import { ScanCard } from '@/components/ScanCard';
@@ -31,11 +31,12 @@ export function HomePage() {
   const navigate = useNavigate();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: '', description: '' },
+    defaultValues: { title: '', description: '', file: undefined },
+    mode: 'onChange', // Validate on change for better responsiveness
   });
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = useCallback((file: File) => {
     form.setValue('file', file, { shouldValidate: true });
-  };
+  }, [form]);
   const onSubmit = async (data: FormValues) => {
     setIsUploading(true);
     setUploadProgress(0);
@@ -195,6 +196,7 @@ export function HomePage() {
                         </motion.div>
                         <motion.div variants={fieldVariants} initial="hidden" animate="visible" transition={{ delay: 0.8 }}>
                           <Button type="submit" className="w-full btn-gradient" disabled={isUploading || !form.formState.isValid}>
+                            {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isUploading ? 'Uploading...' : 'Upload and Scan'}
                           </Button>
                         </motion.div>
@@ -246,7 +248,7 @@ export function HomePage() {
               </motion.div>
             </main>
             <footer className="text-center mt-16 text-muted-foreground/70 text-sm">
-              <p>Built with ❤�� at Cloudflare</p>
+              <p>Built with ❤��� at Cloudflare</p>
             </footer>
           </div>
         </div>
