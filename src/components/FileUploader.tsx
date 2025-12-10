@@ -15,6 +15,12 @@ export function FileUploader({ onUpload, isUploading, progress }: FileUploaderPr
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const removeFile = useCallback(() => {
+    setFile(null);
+    setPreview(null);
+    setError(null);
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview]);
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
     setError(null);
     if (fileRejections.length > 0) {
@@ -53,12 +59,6 @@ export function FileUploader({ onUpload, isUploading, progress }: FileUploaderPr
       'text/plain': ['.txt'],
     } as Accept,
   });
-  const removeFile = () => {
-    setFile(null);
-    setPreview(null);
-    setError(null);
-    if (preview) URL.revokeObjectURL(preview);
-  };
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -108,7 +108,7 @@ export function FileUploader({ onUpload, isUploading, progress }: FileUploaderPr
         <p className="text-xs text-muted-foreground">Max file size 15MB</p>
       </div>
     );
-  }, [isUploading, progress, file, preview, isDragActive]);
+  }, [isUploading, progress, file, preview, isDragActive, removeFile]);
   return (
     <div className="space-y-2">
       <div

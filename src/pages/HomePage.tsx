@@ -2,8 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
 import { FileClock, Shield, Cloud } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -12,9 +12,9 @@ import { ScanCard } from '@/components/ScanCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Skeleton } from '@/components/ui/skeleton';
 import { apiForm, api } from '@/lib/api-client';
 import type { ScanRecord } from '@shared/types';
 const formSchema = z.object({
@@ -27,13 +27,10 @@ export function HomePage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [latestScan, setLatestScan] = useState<ScanRecord | null>(null);
-  const navigate = useNavigate();
+  const [isFetchingLatest, setIsFetchingLatest] = useState(true);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-    },
+    defaultValues: { title: '', description: '' },
   });
   const handleFileSelect = (file: File) => {
     form.setValue('file', file, { shouldValidate: true });
@@ -60,13 +57,12 @@ export function HomePage() {
   }, []);
   const onSubmit = async (data: FormValues) => {
     setIsUploading(true);
-    setUploadProgress(0); // Reset progress
+    setUploadProgress(0);
     setLatestScan(null);
     const formData = new FormData();
     formData.append('file', data.file);
     if (data.title) formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
-    // Simulate upload progress
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => (prev < 95 ? prev + 5 : prev));
     }, 200);
@@ -84,13 +80,12 @@ export function HomePage() {
     }
   };
   useEffect(() => {
-    // Fetch the very latest scan on page load to show something
     const fetchLatest = async () => {
+      setIsFetchingLatest(true);
       try {
         const result = await api<{ items: ScanRecord[] }>('/api/scans?limit=1');
         if (result.items.length > 0) {
           const latest = result.items[0];
-          // If it's still processing, start polling
           if (latest.status === 'processing') {
             pollScanStatus(latest.id);
           } else {
@@ -99,10 +94,16 @@ export function HomePage() {
         }
       } catch (error) {
         console.error("Could not fetch latest scan", error);
+      } finally {
+        setIsFetchingLatest(false);
       }
     };
     fetchLatest();
   }, [pollScanStatus]);
+  const fieldVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
   return (
     <>
       <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
@@ -137,7 +138,7 @@ export function HomePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.7, delay: 0.4 }}
               >
-                <Card className="shadow-lg">
+                <Card className="shadow-lg transition-shadow hover:shadow-xl">
                   <CardHeader>
                     <CardTitle>Submit a File for Scanning</CardTitle>
                     <CardDescription>Fill in the details and upload your file.</CardDescription>
@@ -145,52 +146,60 @@ export function HomePage() {
                   <CardContent>
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Title (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Quarterly Report" {...field} disabled={isUploading} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description (Optional)</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="A brief description of the file..." {...field} disabled={isUploading} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="file"
-                          render={() => (
-                            <FormItem>
-                              <FormLabel>File</FormLabel>
-                              <FormControl>
-                                <FileUploader
-                                  onUpload={handleFileSelect}
-                                  isUploading={isUploading}
-                                  progress={uploadProgress}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full btn-gradient" disabled={isUploading}>
-                          {isUploading ? 'Scanning...' : 'Upload and Scan'}
-                        </Button>
+                        <motion.div variants={fieldVariants} initial="hidden" animate="visible" transition={{ delay: 0.5 }}>
+                          <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Title (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., Quarterly Report" {...field} disabled={isUploading} className="transition-all" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </motion.div>
+                        <motion.div variants={fieldVariants} initial="hidden" animate="visible" transition={{ delay: 0.6 }}>
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description (Optional)</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="A brief description of the file..." {...field} disabled={isUploading} className="transition-all" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </motion.div>
+                        <motion.div variants={fieldVariants} initial="hidden" animate="visible" transition={{ delay: 0.7 }}>
+                          <FormField
+                            control={form.control}
+                            name="file"
+                            render={() => (
+                              <FormItem>
+                                <FormLabel>File</FormLabel>
+                                <FormControl>
+                                  <FileUploader
+                                    onUpload={handleFileSelect}
+                                    isUploading={isUploading}
+                                    progress={uploadProgress}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </motion.div>
+                        <motion.div variants={fieldVariants} initial="hidden" animate="visible" transition={{ delay: 0.8 }}>
+                          <Button type="submit" className="w-full btn-gradient" disabled={isUploading || !form.formState.isValid}>
+                            {isUploading ? 'Scanning...' : 'Upload and Scan'}
+                          </Button>
+                        </motion.div>
                       </form>
                     </Form>
                   </CardContent>
@@ -208,7 +217,13 @@ export function HomePage() {
                     <CardDescription>The result of your most recent scan will appear here.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {latestScan ? (
+                    {isFetchingLatest ? (
+                      <div className="space-y-3 p-4">
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    ) : latestScan ? (
                       <ScanCard scan={latestScan} />
                     ) : (
                       <div className="text-center py-10 text-muted-foreground">
@@ -232,8 +247,8 @@ export function HomePage() {
                 </Card>
               </motion.div>
             </main>
-            <footer className="text-center mt-16 text-muted-foreground text-sm">
-              <p>Built with ��️ at Cloudflare</p>
+            <footer className="text-center mt-16 text-muted-foreground/70 text-sm">
+              <p>Built with ❤️ at Cloudflare</p>
             </footer>
           </div>
         </div>
