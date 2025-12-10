@@ -32,34 +32,43 @@ export function HomePage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { title: '', description: '', file: undefined },
-    mode: 'onChange', // Validate on change for better responsiveness
+    mode: 'onChange',
   });
   const handleFileSelect = useCallback((file: File) => {
     form.setValue('file', file, { shouldValidate: true });
   }, [form]);
   const onSubmit = async (data: FormValues) => {
+    console.log('Form submitted. Preparing to upload...');
     setIsUploading(true);
     setUploadProgress(0);
     const formData = new FormData();
     formData.append('file', data.file);
     if (data.title) formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
+    console.log('FormData created:', {
+      file: data.file.name,
+      title: data.title,
+      description: data.description,
+    });
     // Simulate progress for better UX
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => (prev < 95 ? prev + 10 : prev));
     }, 200);
     try {
+      console.log('Calling API /api/scan...');
       const response = await apiForm<{ id: string }>(`/api/scan`, formData);
+      console.log('API call successful:', response);
       clearInterval(progressInterval);
       setUploadProgress(100);
       toast.success('File uploaded successfully!');
       navigate(`/success/${response.id}`);
     } catch (error) {
+      console.error('Upload failed:', error);
       clearInterval(progressInterval);
       setIsUploading(false);
       setUploadProgress(0);
-      toast.error('Upload failed. Please try again.');
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+      toast.error(`Upload failed: ${errorMessage}`);
     }
   };
   const pollScanStatus = useCallback(async (scanId: string) => {
@@ -248,7 +257,7 @@ export function HomePage() {
               </motion.div>
             </main>
             <footer className="text-center mt-16 text-muted-foreground/70 text-sm">
-              <p>Built with ❤��� at Cloudflare</p>
+              <p>Built with ❤�� at Cloudflare</p>
             </footer>
           </div>
         </div>
