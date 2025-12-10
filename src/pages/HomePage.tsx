@@ -116,7 +116,7 @@ export function HomePage() {
     <>
       <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
         <ThemeToggle />
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 via-transparent to-slate-100/20 dark:from-orange-900/10 dark:to-slate-900/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 via-transparent to-slate-100/20 dark:from-orange-900/10 dark:to-slate-900/10 pointer-events-none" aria-hidden="true" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-8 md:py-10 lg:py-12">
             <header className="text-center space-y-4 mb-12">
@@ -129,6 +129,7 @@ export function HomePage() {
                 <div className="flex items-center justify-center gap-2 text-primary font-bold text-4xl md:text-5xl font-display">
                   <Cloud className="h-10 w-10 text-orange-500" />
                   <span>ScanForm</span>
+                  <span className="text-sm text-muted-foreground ml-2">v1.0.1</span>
                 </div>
               </motion.div>
               <motion.p
@@ -257,7 +258,7 @@ export function HomePage() {
               </motion.div>
             </main>
             <footer className="text-center mt-16 text-muted-foreground/70 text-sm">
-              <p>Built with ❤�� at Cloudflare</p>
+              <p>Built with ❤��� at Cloudflare</p>
             </footer>
           </div>
         </div>
