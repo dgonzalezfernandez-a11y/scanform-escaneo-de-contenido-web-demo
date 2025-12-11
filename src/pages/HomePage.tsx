@@ -163,7 +163,7 @@ console.log('API call successful:', response);
                 <div className="flex items-center justify-center gap-2 text-primary font-bold text-4xl md:text-5xl font-display">
                   <Cloud className="h-10 w-10 text-orange-500" />
                   <span>ScanForm</span>
-                  <span className="text-sm text-muted-foreground ml-2">v1.0.1</span>
+                  <span className="text-sm text-muted-foreground ml-2">v1.0.2</span>
                 </div>
               </motion.div>
               <motion.p
