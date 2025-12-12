@@ -51,13 +51,14 @@ export function FileUploader({ onUpload, isUploading, progress }: FileUploaderPr
     onDrop,
     maxSize: MAX_SIZE,
     multiple: false,
-    accept: {
+    /*accept: {
       'image/*': ['.jpeg', '.png', '.gif', '.webp'],
       'application/pdf': ['.pdf'],
       'application/msword': ['.doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'text/plain': ['.txt'],
     } as Accept,
+    */
   });
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
